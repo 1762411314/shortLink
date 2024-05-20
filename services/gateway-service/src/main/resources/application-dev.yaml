@@ -1,0 +1,29 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: admin-service
+          uri: lb://admin-service/api/short-link/admin/**
+          predicates:
+            - Path=/api/short-link/admin/**
+          filters:
+            - name: TokenValidate
+
+        - id: user-service
+          uri: lb://user-service/api/short-link/user/**
+          predicates:
+            - Path=/api/short-link/user/**
+          filters:
+            - name: TokenValidate
+              args:
+                whitePathList:
+                  - /api/short-link/user/v1/login
+                  - /api/short-link/user/v1/has-username
+
+        - id: shortLink-service
+          uri: lb://shortLink-service/api/short-link/**
+          predicates:
+            - Path=/api/short-link/**
+          filters:
+            - name: TokenValidate
+
