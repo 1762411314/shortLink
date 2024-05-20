@@ -3,6 +3,9 @@ package org.sulong.project12306.services.admin.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.sulong.project12306.framework.convention.result.Result;
+import org.sulong.project12306.framework.idempotent.annotation.Idempotent;
+import org.sulong.project12306.framework.idempotent.enums.IdempotentSceneEnum;
+import org.sulong.project12306.framework.idempotent.enums.IdempotentTypeEnum;
 import org.sulong.project12306.framework.web.Results;
 import org.sulong.project12306.services.admin.dto.req.ShortLinkGroupSaveReqDTO;
 import org.sulong.project12306.services.admin.dto.req.ShortLinkGroupSortReqDTO;
@@ -24,6 +27,10 @@ public class GroupController {
     /**
      * 新增短链接分组
      */
+    @Idempotent(
+            type = IdempotentTypeEnum.PARAM,
+            scene = IdempotentSceneEnum.RESTAPI
+    )
     @PostMapping("/api/short-link/admin/v1/group")
     public Result<Void> save(@RequestBody ShortLinkGroupSaveReqDTO requestParam) {
         groupService.saveGroup(requestParam.getName());

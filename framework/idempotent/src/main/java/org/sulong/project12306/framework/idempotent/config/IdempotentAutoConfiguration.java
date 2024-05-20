@@ -7,43 +7,69 @@ import org.springframework.context.annotation.Bean;
 import org.sulong.project12306.framework.cache.DistributedCache;
 import org.sulong.project12306.framework.idempotent.core.IdempotentAspect;
 import org.sulong.project12306.framework.idempotent.core.param.IdempotentParamExecuteHandler;
+import org.sulong.project12306.framework.idempotent.core.param.IdempotentParamService;
 import org.sulong.project12306.framework.idempotent.core.spel.IdempotentSpELByMQExecuteHandler;
 import org.sulong.project12306.framework.idempotent.core.spel.IdempotentSpELByRestAPIExecuteHandler;
+import org.sulong.project12306.framework.idempotent.core.spel.IdempotentSpELService;
 import org.sulong.project12306.framework.idempotent.core.token.IdempotentTokenController;
 import org.sulong.project12306.framework.idempotent.core.token.IdempotentTokenExecuteHandler;
 import org.sulong.project12306.framework.idempotent.core.token.IdempotentTokenService;
 
-@EnableConfigurationProperties(IdempotentProperties.class)
 
+@EnableConfigurationProperties(IdempotentProperties.class)
 public class IdempotentAutoConfiguration {
+
+    /**
+     * 幂等切面
+     */
     @Bean
-    @ConditionalOnMissingBean
-    public IdempotentAspect idempotentAspect(){
+    public IdempotentAspect idempotentAspect() {
         return new IdempotentAspect();
     }
+
+    /**
+     * 参数方式幂等实现，基于 RestAPI 场景
+     */
     @Bean
     @ConditionalOnMissingBean
-    public IdempotentParamExecuteHandler idempotentParamExecuteHandler(RedissonClient redissonClient){
+    public IdempotentParamService idempotentParamExecuteHandler(RedissonClient redissonClient) {
         return new IdempotentParamExecuteHandler(redissonClient);
     }
+
+    /**
+     * Token 方式幂等实现，基于 RestAPI 场景
+     */
     @Bean
     @ConditionalOnMissingBean
-    public IdempotentTokenExecuteHandler idempotentTokenExecuteHandler(IdempotentProperties idempotentProperties,
-                                                                       DistributedCache distributedCache){
+    public IdempotentTokenService idempotentTokenExecuteHandler(DistributedCache distributedCache,
+                                                                IdempotentProperties idempotentProperties) {
         return new IdempotentTokenExecuteHandler(idempotentProperties,distributedCache);
     }
+
+    /**
+     * 申请幂等 Token 控制器，基于 RestAPI 场景
+     */
     @Bean
-    public IdempotentTokenController idempotentTokenController(IdempotentTokenService idempotentTokenService){
+    public IdempotentTokenController idempotentTokenController(IdempotentTokenService idempotentTokenService) {
         return new IdempotentTokenController(idempotentTokenService);
     }
+
+    /**
+     * SpEL 方式幂等实现，基于 RestAPI 场景
+     */
     @Bean
     @ConditionalOnMissingBean
-    public IdempotentSpELByRestAPIExecuteHandler idempotentSpELByRestAPIExecuteHandler(RedissonClient redissonClient){
+    public IdempotentSpELService idempotentSpELByRestAPIExecuteHandler(RedissonClient redissonClient) {
         return new IdempotentSpELByRestAPIExecuteHandler(redissonClient);
     }
+
+    /**
+     * SpEL 方式幂等实现，基于 MQ 场景
+     */
     @Bean
     @ConditionalOnMissingBean
-    public IdempotentSpELByMQExecuteHandler idempotentSpELByMQExecuteHandler(DistributedCache distributedCache){
+    public IdempotentSpELByMQExecuteHandler idempotentSpELByMQExecuteHandler(DistributedCache distributedCache) {
         return new IdempotentSpELByMQExecuteHandler(distributedCache);
     }
 }
+

@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.sulong.project12306.framework.convention.result.Result;
+import org.sulong.project12306.framework.idempotent.annotation.Idempotent;
+import org.sulong.project12306.framework.idempotent.enums.IdempotentSceneEnum;
+import org.sulong.project12306.framework.idempotent.enums.IdempotentTypeEnum;
 import org.sulong.project12306.framework.web.Results;
 import org.sulong.project12306.services.shortlinkservice.dto.req.ShortLinkBatchCreateReqDTO;
 import org.sulong.project12306.services.shortlinkservice.dto.req.ShortLinkCreateReqDTO;
@@ -30,12 +33,12 @@ public class ShortLinkController {
     /**
      * 创建短链接
      */
-    @PostMapping("/api/short-link/v1/create")
     @SentinelResource(
             value = "create_short-link",
             blockHandler = "createShortLinkBlockHandlerMethod",
             blockHandlerClass = CustomBlockHandler.class
     )
+    @PostMapping("/api/short-link/v1/create")
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO requestParam){
         return Results.success(shortLinkService.createShortLink(requestParam));
     }
