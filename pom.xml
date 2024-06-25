@@ -6,18 +6,17 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.2.4</version>
-        <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.sulong</groupId>
     <artifactId>project12306</artifactId>
     <packaging>pom</packaging>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>project12306</name>
+    <description>project12306</description>
     <modules>
         <module>framework</module>
         <module>services</module>
     </modules>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>project12306</name>
-    <description>project12306</description>
     <properties>
         <java.version>17</java.version>
     </properties>
