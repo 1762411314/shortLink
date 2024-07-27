@@ -6,11 +6,9 @@ import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.JSON;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -85,7 +83,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .append("/")
                 .append(shortLinkSuffix)
                 .toString();
-
         ShortLinkDO shortLinkDO = ShortLinkDO.builder()
                 .domain(createShortLinkDefaultDomain)
                 .originUrl(requestParam.getOriginUrl())
@@ -338,6 +335,61 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         if (StrUtil.isNotBlank(originalLink)) {
             shortLinkStats(buildLinkStatsRecordAndSetUser(fullShortUrl, request, response));
             ((HttpServletResponse) response).sendRedirect(originalLink);
+            return;
+        }
+        boolean contains= shortUriCreateCachePenetrationBloomFilter.contains(fullShortUrl);
+        if (!contains){
+            ((HttpServletResponse) response).sendRedirect("/page/notfound");
+            return;
+        }
+        String gotoIsNullShortLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl));
+        if (StrUtil.isNotBlank(gotoIsNullShortLink)) {
+            ((HttpServletResponse) response).sendRedirect("/page/notfound");
+            return;
+        }
+        RLock lock= redissonClient.getLock(LOCK_GOTO_SHORT_LINK_KEY);
+        lock.lock();
+        try {
+            //双重判断
+            originalLink=stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY,fullShortUrl));
+            if (StrUtil.isNotBlank(originalLink)){
+                shortLinkStats(buildLinkStatsRecordAndSetUser(fullShortUrl, request, response));
+                ((HttpServletResponse) response).sendRedirect(originalLink);
+                return;
+            }
+            gotoIsNullShortLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl));
+            if (StrUtil.isNotBlank(gotoIsNullShortLink)) {
+                ((HttpServletResponse) response).sendRedirect("/page/notfound");
+                return;
+            }
+            LambdaQueryWrapper<ShortLinkGotoDO> linkGotoQueryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
+                    .eq(ShortLinkGotoDO::getFullShortUrl, fullShortUrl);
+            ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(linkGotoQueryWrapper);
+            if (shortLinkGotoDO==null){
+                stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl), "-", 30, TimeUnit.MINUTES);
+                ((HttpServletResponse) response).sendRedirect("/page/notfound");
+                return;
+            }
+            LambdaQueryWrapper<ShortLinkDO> queryWrapper=Wrappers.lambdaQuery(ShortLinkDO.class)
+                    .eq(ShortLinkDO::getFullShortUrl,fullShortUrl)
+                    .eq(ShortLinkDO::getGid,shortLinkGotoDO.getGid())
+                    .eq(ShortLinkDO::getDelFlag,0)
+                    .eq(ShortLinkDO::getEnableStatus,0);
+            ShortLinkDO shortLinkDO = baseMapper.selectOne(queryWrapper);
+            if (shortLinkDO==null||(shortLinkDO.getValidDate() != null && shortLinkDO.getValidDate().before(new Date()))){
+                stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl), "-", 30, TimeUnit.MINUTES);
+                ((HttpServletResponse) response).sendRedirect("/page/notfound");
+                return;
+            }
+            stringRedisTemplate.opsForValue().set(
+                    String.format(GOTO_SHORT_LINK_KEY,fullShortUrl),
+                    shortLinkDO.getOriginUrl(),
+                    LinkUtil.getLinkCacheValidTime(shortLinkDO.getValidDate()), TimeUnit.MILLISECONDS
+            );
+            shortLinkStats(buildLinkStatsRecordAndSetUser(fullShortUrl, request, response));
+            ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
+        }finally {
+            lock.unlock();
         }
     }
 
@@ -461,7 +513,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
         List<String> details = gotoDomainWhiteListConfiguration.getDetails();
         if (!details.contains(domain)) {
-            throw new ClientException("演示环境为避免恶意攻击，请生成以下网站跳转链接：" + gotoDomainWhiteListConfiguration.getNames());
+            throw new ClientException("请生成以下网站跳转链接：" + gotoDomainWhiteListConfiguration.getNames());
         }
     }
 }

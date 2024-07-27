@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.sulong.project12306.framework.convention.result.Result;
+import org.sulong.project12306.framework.idempotent.annotation.Idempotent;
+import org.sulong.project12306.framework.idempotent.enums.IdempotentSceneEnum;
+import org.sulong.project12306.framework.idempotent.enums.IdempotentTypeEnum;
 import org.sulong.project12306.framework.web.Results;
 import org.sulong.project12306.services.admin.remote.ShortLinkActualRemoteService;
 import org.sulong.project12306.services.admin.remote.dto.req.ShortLinkBatchCreateReqDTO;
@@ -35,6 +38,10 @@ public class ShortLinkController {
     /**
      * 创建短链接
      */
+    @Idempotent(
+            type = IdempotentTypeEnum.PARAM,
+            scene = IdempotentSceneEnum.RESTAPI
+    )
     @PostMapping("/api/short-link/admin/v1/create")
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO requestParam) {
         return shortLinkActualRemoteService.createShortLink(requestParam);
@@ -43,6 +50,10 @@ public class ShortLinkController {
     /**
      * 批量创建短链接
      */
+    @Idempotent(
+            type = IdempotentTypeEnum.PARAM,
+            scene = IdempotentSceneEnum.RESTAPI
+    )
     @SneakyThrows
     @PostMapping("/api/short-link/admin/v1/create/batch")
     public void batchCreateShortLink(@RequestBody ShortLinkBatchCreateReqDTO requestParam, HttpServletResponse response) {
@@ -56,6 +67,10 @@ public class ShortLinkController {
     /**
      * 修改短链接
      */
+    @Idempotent(
+            type = IdempotentTypeEnum.PARAM,
+            scene = IdempotentSceneEnum.RESTAPI
+    )
     @PostMapping("/api/short-link/admin/v1/update")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam) {
         shortLinkActualRemoteService.updateShortLink(requestParam);

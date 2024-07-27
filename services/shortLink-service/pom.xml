@@ -99,12 +99,6 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.sulong.project12306.framework</groupId>
-            <artifactId>cache</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>com.alibaba.csp</groupId>
             <artifactId>sentinel-core</artifactId>
             <version>1.8.6</version>
@@ -129,6 +123,18 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.sulong.project12306.framework</groupId>
+            <artifactId>idempotent</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.sulong.project12306.framework</groupId>
+            <artifactId>bases</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

@@ -33,6 +33,7 @@ public final class IdempotentContext {
             context=new HashMap<>();
         }
         context.put(key,object);
+        putContext(context);
     }
 
     public static void putContext(Map<String, Object> context) {

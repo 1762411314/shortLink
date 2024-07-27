@@ -14,7 +14,7 @@ public enum IdempotentMQConsumeStatusEnum {
 
     private final String code;
 
-    public boolean isError(String consumeStatus){
+    public static boolean isError(String consumeStatus){
         return Objects.equals(consumeStatus,CONSUMING.code);
     }
 }

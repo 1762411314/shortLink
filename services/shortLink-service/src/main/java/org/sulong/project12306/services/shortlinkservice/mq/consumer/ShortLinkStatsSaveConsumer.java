@@ -19,6 +19,9 @@ import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.stereotype.Component;
+import org.sulong.project12306.framework.idempotent.annotation.Idempotent;
+import org.sulong.project12306.framework.idempotent.enums.IdempotentSceneEnum;
+import org.sulong.project12306.framework.idempotent.enums.IdempotentTypeEnum;
 import org.sulong.project12306.services.shortlinkservice.dao.entity.*;
 import org.sulong.project12306.services.shortlinkservice.dao.mapper.*;
 import org.sulong.project12306.services.shortlinkservice.dto.biz.ShortLinkStatsRecordDTO;
@@ -51,11 +54,17 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
     @Override
+    @Idempotent(
+            uniqueKeyPrefix = "short-link:stats:idempotent",
+            key ="#message.getId()+'_'+#message.hashCode()",
+            type = IdempotentTypeEnum.SPEL,
+            scene = IdempotentSceneEnum.MQ,
+            keyTimeout = 7200L
+    )
     public void onMessage(MapRecord<String, String, String> message) {
-        String stream=message.getStream();
-        RecordId id=message.getId();
-
         try {
+            String stream=message.getStream();
+            RecordId id=message.getId();
             Map<String,String> producerMap=message.getValue();
             ShortLinkStatsRecordDTO statsRecord= JSON.parseObject(producerMap.get("statsRecord"), ShortLinkStatsRecordDTO.class);
             actualSaveShortLinkStats(statsRecord);
