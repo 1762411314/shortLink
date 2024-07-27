@@ -38,7 +38,7 @@ public class UserInfoController {
      * 检查用户名是否已存在
      */
     @GetMapping("/api/short-link/user/v1/has-username")
-    public Result<Boolean> hasUsername(@RequestParam("username") @NotEmpty String username) {
+    public Result<Boolean> hasUsername(@RequestParam("username") String username) {
         return Results.success(userLoginService.hasUsername(username));
     }
 
@@ -46,7 +46,7 @@ public class UserInfoController {
      * 注册用户
      */
     @PostMapping("/api/short-link/user/v1")
-    public Result<UserRegisterRespDTO> register(@RequestBody @Valid UserRegisterReqDTO requestParam) {
+    public Result<UserRegisterRespDTO> register(@RequestBody UserRegisterReqDTO requestParam) {
         return Results.success(userLoginService.register(requestParam));
     }
 

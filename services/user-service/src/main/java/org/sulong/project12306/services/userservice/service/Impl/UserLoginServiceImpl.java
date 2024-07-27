@@ -2,6 +2,8 @@ package org.sulong.project12306.services.userservice.service.Impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
@@ -50,8 +52,6 @@ public class UserLoginServiceImpl implements UserLoginService {
     private final UserMapper userMapper;
     private final UserReuseMapper userReuseMapper;
     private final UserDeletionMapper userDeletionMapper;
-    private final UserPhoneMapper userPhoneMapper;
-    private final UserMailMapper userMailMapper;
     private final DistributedCache distributedCache;
     private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
     private final AbstractChainContext<UserRegisterReqDTO> abstractChainContext;
@@ -67,17 +67,12 @@ public class UserLoginServiceImpl implements UserLoginService {
                 break;
             }
         }
-        String username;
-        if (mailFlag) {
-            UserMailDO userMailDO = userMailMapper.queryUserByMail(usernameOrMailOrPhone);
-            username = Optional.ofNullable(userMailDO).map(UserMailDO::getUsername)
-                    .orElseThrow(() -> new ClientException("用户名/手机号/邮箱不存在"));
-        } else {
-            UserPhoneDO userPhoneDO = userPhoneMapper.queryUserByPhone(usernameOrMailOrPhone);
-            username = Optional.ofNullable(userPhoneDO).map(UserPhoneDO::getUsername)
-                    .orElse(usernameOrMailOrPhone);
-        }
-        UserDO userDO = userMapper.loginByUsername(username, requestParam.getPassword());
+        String username = requestParam.getUsernameOrMailOrPhone();
+        LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class)
+                .eq(UserDO::getUsername, username)
+                .eq(UserDO::getPassword, requestParam.getPassword())
+                .select(UserDO::getId, UserDO::getUsername, UserDO::getRealName);
+        UserDO userDO = userMapper.selectOne(queryWrapper);
         if (userDO != null) {
             UserInfoDTO userInfoDTO = UserInfoDTO.builder()
                     .userId(String.valueOf(userDO.getId()))
@@ -118,7 +113,7 @@ public class UserLoginServiceImpl implements UserLoginService {
     @Override
     public UserRegisterRespDTO register(UserRegisterReqDTO requestParam) {
         abstractChainContext.handler(UserChainMarkEnum.USER_REGISTER_FILTER.name(), requestParam);
-        RLock lock = redissonClient.getLock(RedisKeyConstant.LOCK_USER_REGISTER + requestParam.getUserName());
+        RLock lock = redissonClient.getLock(RedisKeyConstant.LOCK_USER_REGISTER + requestParam.getUsername());
         if (!lock.tryLock()) {
             throw new ServiceException(HAS_USERNAME_NOTNULL);
         }
@@ -129,33 +124,10 @@ public class UserLoginServiceImpl implements UserLoginService {
                     throw new ServiceException(USER_REGISTER_FAIL);
                 }
             } catch (DuplicateKeyException ex) {
-                log.error("用户名 [{}] 重复注册", requestParam.getUserName());
+                log.error("用户名 [{}] 重复注册", requestParam.getUsername());
                 throw new ServiceException(HAS_USERNAME_NOTNULL);
             }
-            UserPhoneDO userPhoneDO = UserPhoneDO.builder()
-                    .phone(requestParam.getPhone())
-                    .username(requestParam.getUserName())
-                    .build();
-            try {
-                userPhoneMapper.insert(userPhoneDO);
-            } catch (DuplicateKeyException ex) {
-                log.error("用户 [{}] 注册手机号 [{}] 重复", requestParam.getUserName(), requestParam.getPhone());
-                throw new ServiceException(PHONE_REGISTERED);
-            }
-
-            if (StrUtil.isNotBlank(requestParam.getMail())) {
-                UserMailDO userMailDO = UserMailDO.builder()
-                        .mail(requestParam.getMail())
-                        .username(requestParam.getUserName())
-                        .build();
-                try {
-                    userMailMapper.insert(userMailDO);
-                } catch (DuplicateKeyException ex) {
-                    log.error("用户 [{}] 注册邮箱 [{}] 重复", requestParam.getUserName(), requestParam.getMail());
-                    throw new ServiceException(MAIL_REGISTERED);
-                }
-            }
-            String username = requestParam.getUserName();
+            String username = requestParam.getUsername();
             userReuseMapper.delete(username);
             StringRedisTemplate redisTemplate = (StringRedisTemplate) distributedCache.getInstance();
             redisTemplate.opsForSet().remove(USER_REGISTER_REUSE_SHARDING + UserReuseUtil.hashShardingIdx(username), username);
@@ -185,20 +157,6 @@ public class UserLoginServiceImpl implements UserLoginService {
                 userDO.setUsername(username);
                 userDO.setDeletionTime(System.currentTimeMillis());
                 userMapper.deletionUser(userDO);
-
-                UserPhoneDO userPhoneDO = UserPhoneDO.builder()
-                        .phone(userQueryRespDTO.getPhone())
-                        .deletionTime(System.currentTimeMillis())
-                        .build();
-                userPhoneMapper.deletionUser(userPhoneDO);
-
-                if (StrUtil.isNotBlank(userQueryRespDTO.getMail())) {
-                    UserMailDO userMailDO = UserMailDO.builder()
-                            .mail(userQueryRespDTO.getMail())
-                            .deletionTime(System.currentTimeMillis())
-                            .build();
-                    userMailMapper.deletionUser(userMailDO);
-                }
 
                 distributedCache.delete(UserContext.getToken());
                 userReuseMapper.insert(new UserReuseDO(username));

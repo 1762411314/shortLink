@@ -14,10 +14,10 @@ public final class UserRegisterCheckDeletionChainHandler implements UserRegister
 
     @Override
     public void handler(UserRegisterReqDTO requestParam) {
-        Integer userDeletionNum=userService.queryUserDeletionNum(requestParam.getIdType(),requestParam.getIdCard());
-        if (userDeletionNum>5){
-            throw new ClientException("证件号多次注销账号已被加入黑名单");
-        }
+//        Integer userDeletionNum=userService.queryUserDeletionNum(requestParam.getIdType(),requestParam.getIdCard());
+//        if (userDeletionNum>5){
+//            throw new ClientException("证件号多次注销账号已被加入黑名单");
+//        }
     }
 
     @Override

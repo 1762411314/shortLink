@@ -17,12 +17,6 @@ spring:
 server:
   port: 8003
 
-mybatis:
-  mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: org.sulong.project12306.services.userservice.dao.entity
-  configuration:
-    map-underscore-to-camel-case: true
-
 framework:
   fastjson:
     safa-mode: true

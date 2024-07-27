@@ -15,16 +15,12 @@ public final class UserRegisterParamNotNullChainHandler implements UserRegisterC
 
     @Override
     public void handler(UserRegisterReqDTO requestParam) {
-        if (Objects.isNull(requestParam.getUserName())) {
+        if (Objects.isNull(requestParam.getUsername())) {
             throw new ClientException(UserRegisterErrorCodeEnum.USER_NAME_NOTNULL);
         } else if (Objects.isNull(requestParam.getPassword())) {
             throw new ClientException(UserRegisterErrorCodeEnum.PASSWORD_NOTNULL);
         } else if (Objects.isNull(requestParam.getPhone())) {
             throw new ClientException(UserRegisterErrorCodeEnum.PHONE_NOTNULL);
-        } else if (Objects.isNull(requestParam.getIdType())) {
-            throw new ClientException(UserRegisterErrorCodeEnum.ID_TYPE_NOTNULL);
-        } else if (Objects.isNull(requestParam.getIdCard())) {
-            throw new ClientException(UserRegisterErrorCodeEnum.ID_CARD_NOTNULL);
         } else if (Objects.isNull(requestParam.getMail())) {
             throw new ClientException(UserRegisterErrorCodeEnum.MAIL_NOTNULL);
         } else if (Objects.isNull(requestParam.getRealName())) {

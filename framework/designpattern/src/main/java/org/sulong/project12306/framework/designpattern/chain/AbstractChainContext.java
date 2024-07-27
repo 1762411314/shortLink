@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 public class AbstractChainContext<T> implements CommandLineRunner {
 
     private final Map<String, List<AbstractChainHandler>> abstractChainHandlerContainer = new HashMap<>();
-
     /**
      * 责任链组件执行
      *

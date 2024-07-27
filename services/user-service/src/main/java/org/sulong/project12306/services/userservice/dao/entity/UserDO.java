@@ -1,8 +1,10 @@
 package org.sulong.project12306.services.userservice.dao.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 @Data
+@TableName("t_user")
 public class UserDO {
     /**
      * id

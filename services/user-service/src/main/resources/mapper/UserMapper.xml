@@ -3,18 +3,11 @@
 
 <mapper namespace="org.sulong.project12306.services.userservice.dao.mapper.UserMapper">
 
-    <update id="deletionUser" parameterType="UserDO">
-        update t_user_0
+    <update id="deletionUser" parameterType="org.sulong.project12306.services.userservice.dao.entity.UserDO">
+        update t_user
         set deletion_time = #{deletionTime},
-            del_flag = '1'
+            del_flag      = '1'
         where username = #{username} and del_flag = '0'
     </update>
 
-    <!--
-    UserDO LoginByUsername(String username,String password);
-    -->
-    <select id="loginByUsername" parameterType="UserDO">
-        select id,username,real_name,phone,mail from t_user
-        where username=#{username} and password=#{password} and del_flag='0'
-    </select>
 </mapper>

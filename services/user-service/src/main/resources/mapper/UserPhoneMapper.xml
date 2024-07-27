@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="org.sulong.project12306.services.userservice.dao.mapper.UserPhoneMapper">
-    <select id="queryUserByPhone" parameterType="UserPhoneDO">
-        select id,username,phone,deletion_time from t_user where phone=#{phone}
-    </select>
-</mapper>

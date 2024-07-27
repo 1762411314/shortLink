@@ -1,10 +1,12 @@
 package org.sulong.project12306.services.userservice.dao.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.util.Date;
 
 @Data
+@TableName("t_passenger")
 public class PassengerDO {
     /**
      * id

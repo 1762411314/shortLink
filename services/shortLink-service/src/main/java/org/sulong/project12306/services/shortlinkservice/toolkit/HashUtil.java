@@ -25,7 +25,7 @@ public class HashUtil {
 
     public static String hashToBase62(String str) {
         int i = MurmurHash.hash32(str);
-        long num = i < 0 ? Integer.MAX_VALUE - (long) i : i;
+        long num = i < 0 ? Integer.MAX_VALUE + (long) i : i;
         return convertDecToBase62(num);
     }
 }

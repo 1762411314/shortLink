@@ -14,7 +14,7 @@ public final class UserRegisterHasUsernameChainHandler implements UserRegisterCr
     private final UserLoginService userLoginService;
     @Override
     public void handler(UserRegisterReqDTO requestParam) {
-        if (!userLoginService.hasUsername(requestParam.getUserName())){
+        if (userLoginService.hasUsername(requestParam.getUsername())){
             throw new ClientException(UserRegisterErrorCodeEnum.HAS_USERNAME_NOTNULL);
         }
     }
